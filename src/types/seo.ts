@@ -12,18 +12,8 @@ export interface SEOAnalysis {
     paths: string[];
   };
   links: {
-    internal: {
-      total: number;
-      unique: number;
-      paths: string[];
-    };
-    external: {
-      total: number;
-      unique: number;
-      social: number;
-      nofollow: number;
-      domains: string[];
-    };
+    internal: string[];
+    external: string[];
   };
   meta: {
     hasViewport: boolean;
@@ -41,17 +31,9 @@ export interface SEOAnalysis {
   performance: {
     htmlSize: number;
     loadTime: number;
-    resourceCounts: {
-      css: number;
-      js: number;
-      inlineStyles: number;
-      inlineScripts: number;
-    };
-    score: {
-      score: number;
-      rating: 'poor' | 'fair' | 'good';
-      issues: string[];
-    };
+    score: number;
+    rating: 'excellent' | 'good' | 'fair' | 'poor';
+    suggestions: string[];
   };
   structure: {
     hasDoctype: boolean;
@@ -61,19 +43,21 @@ export interface SEOAnalysis {
     hasFooterTag: boolean;
     hasNavTag: boolean;
   };
-  contentScore: {
-    wordCount: number;
-    readingTime: number;
-    hasStructuredData: boolean;
-    contentStructure: {
-      paragraphs: number;
-      lists: number;
-      tables: number;
+  seoScore: {
+    score: number;
+    rating: 'excellent' | 'good' | 'fair' | 'poor';
+    suggestions: string[];
+  };
+  advancedAnalysis?: {
+    backlinks: {
+      total: number;
+      dofollow: number;
+      nofollow: number;
+    };
+    niche: string[];
+    traffic: {
+      score: number;
+      level: 'low' | 'medium' | 'high';
     };
   };
-  traffic: {
-    score: number;
-    level: 'low' | 'medium' | 'high';
-  };
-  niche: string[];
 }
