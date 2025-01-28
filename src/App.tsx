@@ -196,23 +196,72 @@ function App() {
               </div>
             </div>
 
-            {/* Links Analysis */}
+            {/* Link Analysis */}
             <div className={`${darkMode ? 'dark:bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-6`}>
               <h2 className={`text-lg font-semibold mb-4 flex items-center ${darkMode ? 'dark:text-white' : 'text-gray-900'}`}>
                 <Link2 className="h-5 w-5 mr-2 text-indigo-600" />
-                Links Analysis
+                Link Analysis
               </h2>
               <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium text-gray-700">Statistics</h3>
-                  <ul className="mt-1 space-y-1">
-                    <li className="text-gray-600">
-                      Internal Links: {analysis.links.internal.length}
-                    </li>
-                    <li className="text-gray-600">
-                      External Links: {analysis.links.external.length}
-                    </li>
-                  </ul>
+                {/* Internal Links */}
+                <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <h3 className={`text-sm font-medium mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Internal Links</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Total Links</p>
+                      <p className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                        {analysis.advancedAnalysis.linkMetrics.internal.total}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Unique URLs</p>
+                      <p className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                        {analysis.advancedAnalysis.linkMetrics.internal.unique}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* External Links */}
+                <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <h3 className={`text-sm font-medium mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>External Links</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Total Links</p>
+                      <p className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                        {analysis.advancedAnalysis.linkMetrics.external.total}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Unique Domains</p>
+                      <p className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                        {analysis.advancedAnalysis.linkMetrics.external.unique}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Link Attributes */}
+                <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <h3 className={`text-sm font-medium mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Link Attributes</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Social Media Links</p>
+                      <p className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                        {analysis.advancedAnalysis.linkMetrics.external.social}
+                      </p>
+                    </div>
+                    <div>
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Nofollow Links</p>
+                      <p className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                        {analysis.advancedAnalysis.linkMetrics.external.nofollow}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <p>* This analysis shows links found on the current page only. For complete backlink analysis, use tools like Google Search Console or professional SEO tools.</p>
                 </div>
               </div>
             </div>

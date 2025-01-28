@@ -2,10 +2,17 @@ import axios from 'axios';
 import * as cheerio from 'cheerio';
 
 export interface LinkAnalysis {
-  backlinks: {
-    total: number;
-    dofollow: number;
-    nofollow: number;
+  linkMetrics: {
+    internal: {
+      total: number;
+      unique: number;
+    };
+    external: {
+      total: number;
+      unique: number;
+      social: number;
+      nofollow: number;
+    };
   };
   niche: string[];
   traffic: {
@@ -20,17 +27,42 @@ export async function analyzeLinks(url: string): Promise<LinkAnalysis> {
     const html = response.data.contents;
     const $ = cheerio.load(html);
     
-    // Analyze follow/nofollow
-    const allLinks = $('a[href^="http"]');
-    let dofollow = 0;
-    let nofollow = 0;
+    // Analyze internal and external links
+    const allLinks = $('a[href]');
+    const internalLinks = new Set<string>();
+    const externalLinks = new Set<string>();
+    let socialCount = 0;
+    let nofollowCount = 0;
     
     allLinks.each((_, el) => {
+      const href = $(el).attr('href');
+      if (!href) return;
+      
       const rel = $(el).attr('rel');
-      if (rel && rel.includes('nofollow')) {
-        nofollow++;
-      } else {
-        dofollow++;
+      const isNofollow = rel && rel.includes('nofollow');
+      if (isNofollow) nofollowCount++;
+      
+      try {
+        const linkUrl = new URL(href, url);
+        const isSameHost = linkUrl.hostname === new URL(url).hostname;
+        
+        // Check if it's a social media link
+        const isSocial = linkUrl.hostname.match(
+          /facebook\.com|twitter\.com|instagram\.com|linkedin\.com|youtube\.com|pinterest\.com/i
+        );
+        
+        if (isSocial) socialCount++;
+        
+        if (isSameHost) {
+          internalLinks.add(linkUrl.pathname);
+        } else if (linkUrl.protocol.startsWith('http')) {
+          externalLinks.add(linkUrl.hostname);
+        }
+      } catch {
+        // If URL parsing fails, assume it's an internal link
+        if (href.startsWith('/')) {
+          internalLinks.add(href);
+        }
       }
     });
 
@@ -50,15 +82,14 @@ export async function analyzeLinks(url: string): Promise<LinkAnalysis> {
       title.includes(niche)
     );
 
-    // Simple traffic score based on content length, links, and social presence
+    // Calculate traffic score based on content and link metrics
     const contentLength = content.length;
-    const socialLinks = $('a[href*="facebook"], a[href*="twitter"], a[href*="instagram"], a[href*="linkedin"]').length;
     const hasAnalytics = html.includes('google-analytics') || html.includes('gtag');
     
     let trafficScore = 0;
     trafficScore += Math.min(100, contentLength / 1000); // Content length score (max 100)
-    trafficScore += Math.min(50, allLinks.length * 2); // Links score (max 50)
-    trafficScore += socialLinks * 10; // Social presence score (10 per platform)
+    trafficScore += Math.min(50, externalLinks.size * 2); // External links score (max 50)
+    trafficScore += socialCount * 10; // Social presence score (10 per platform)
     trafficScore += hasAnalytics ? 30 : 0; // Analytics presence score
     
     // Normalize score to 0-100
@@ -67,10 +98,17 @@ export async function analyzeLinks(url: string): Promise<LinkAnalysis> {
     const trafficLevel = trafficScore < 40 ? 'low' : trafficScore < 70 ? 'medium' : 'high';
     
     return {
-      backlinks: {
-        total: allLinks.length,
-        dofollow,
-        nofollow
+      linkMetrics: {
+        internal: {
+          total: $('a[href^="/"]').length,
+          unique: internalLinks.size
+        },
+        external: {
+          total: $('a[href^="http"]').length,
+          unique: externalLinks.size,
+          social: socialCount,
+          nofollow: nofollowCount
+        }
       },
       niche: detectedNiches.length > 0 ? detectedNiches : ['unknown'],
       traffic: {

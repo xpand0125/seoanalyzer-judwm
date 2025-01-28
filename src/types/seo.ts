@@ -67,6 +67,18 @@ export interface SEOAnalysis {
       dofollow: number;
       nofollow: number;
     };
+    linkMetrics: {
+      internal: {
+        total: number;
+        unique: number;
+      };
+      external: {
+        total: number;
+        unique: number;
+        social: number;
+        nofollow: number;
+      };
+    };
     niche: string[];
     traffic: {
       score: number;
