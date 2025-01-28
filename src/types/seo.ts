@@ -1,63 +1,117 @@
 export interface SEOAnalysis {
   title: string;
   description: string;
-  headings: {
-    h1: string[];
-    h2: string[];
-    h3: string[];
+  meta: MetaInfo[];
+  headings: HeadingInfo[];
+  images: ImageInfo[];
+  links: LinkInfo[];
+  structure: StructureInfo;
+  performance: PerformanceInfo;
+  seoScore: ScoreInfo;
+  contentScore: ScoreInfo;
+  contentAnalysis: ContentAnalysis;
+  securityHeaders: SecurityHeaders;
+  accessibility: AccessibilityInfo;
+  advancedAnalysis?: AdvancedAnalysis;
+}
+
+export interface MetaInfo {
+  name: string;
+  content: string;
+}
+
+export interface HeadingInfo {
+  level: number;
+  text: string;
+  count: number;
+}
+
+export interface ImageInfo {
+  src: string;
+  alt: string;
+  hasAlt: boolean;
+}
+
+export interface LinkInfo {
+  href: string;
+  text: string;
+  isInternal: boolean;
+  isDofollow: boolean;
+}
+
+export interface StructureInfo {
+  hasDoctype: boolean;
+  hasViewport: boolean;
+  hasCharset: boolean;
+  hasLanguage: boolean;
+}
+
+export interface PerformanceInfo {
+  htmlSize: number;
+  loadTime: number;
+  score: number;
+  rating: string;
+  suggestions: string[];
+}
+
+export interface ScoreInfo {
+  score: number;
+  rating: string;
+  suggestions: string[];
+}
+
+export interface ContentAnalysis {
+  wordCount: number;
+  paragraphs: number;
+  readingTime: number;
+  textToHtmlRatio: string;
+  hasSchema: boolean;
+  hasCanonical: boolean;
+  hasFavicon: boolean;
+  hasCustom404: boolean;
+  hasSitemap: boolean;
+  mobileResponsive: boolean;
+  hasSSL: boolean;
+  socialTags: {
+    facebook: boolean;
+    twitter: boolean;
+    linkedin: boolean;
   };
-  images: {
-    total: number;
-    withoutAlt: number;
-    paths: string[];
-  };
-  links: {
-    internal: string[];
-    external: string[];
-  };
-  meta: {
-    hasViewport: boolean;
-    hasCharset: boolean;
-    robots: string | null;
-    keywords: string | null;
-    author: string | null;
-    ogTags: {
-      title: string | null;
-      description: string | null;
-      image: string | null;
-      url: string | null;
-    };
-  };
-  performance: {
-    htmlSize: number;
-    loadTime: number;
+}
+
+export interface SecurityHeaders {
+  hasHSTS: boolean;
+  hasXFrame: boolean;
+  hasCSP: boolean;
+  hasXSS: boolean;
+}
+
+export interface AccessibilityInfo {
+  hasAriaLabels: boolean;
+  hasAltText: boolean;
+  hasSkipLinks: boolean;
+  hasLangAttribute: boolean;
+  hasAccessibleForms: boolean;
+}
+
+export interface AdvancedAnalysis {
+  trafficPotential: {
     score: number;
-    rating: 'excellent' | 'good' | 'fair' | 'poor';
-    suggestions: string[];
+    rating: string;
+    factors: {
+      name: string;
+      value: string;
+      impact: string;
+    }[];
   };
-  structure: {
-    hasDoctype: boolean;
-    hasHtmlLang: boolean;
-    hasMainTag: boolean;
-    hasHeaderTag: boolean;
-    hasFooterTag: boolean;
-    hasNavTag: boolean;
+  backlinks: {
+    count: number;
+    quality: string;
+    domains: string[];
   };
-  seoScore: {
-    score: number;
-    rating: 'excellent' | 'good' | 'fair' | 'poor';
-    suggestions: string[];
-  };
-  advancedAnalysis?: {
-    backlinks: {
-      total: number;
-      dofollow: number;
-      nofollow: number;
-    };
-    niche: string[];
-    traffic: {
-      score: number;
-      level: 'low' | 'medium' | 'high';
-    };
+  niche: {
+    category: string;
+    confidence: number;
+    keywords: string[];
   };
 }

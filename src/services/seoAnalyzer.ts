@@ -104,6 +104,68 @@ export async function analyzeSEO(url: string): Promise<SEOAnalysis> {
     };
 
     // Additional SEO metrics
+    const contentAnalysis = {
+      wordCount: $('body').text().trim().split(/\s+/).length,
+      paragraphs: $('p').length,
+      readingTime: Math.ceil($('body').text().trim().split(/\s+/).length / 200), // Average reading speed: 200 words/minute
+      textToHtmlRatio: (($('body').text().trim().length / html.length) * 100).toFixed(2),
+      hasSchema: html.includes('application/ld+json') || $('[itemtype]').length > 0,
+      hasCanonical: $('link[rel="canonical"]').length > 0,
+      hasFavicon: $('link[rel="icon"], link[rel="shortcut icon"]').length > 0,
+      hasCustom404: false, // Will be determined by checking 404 page
+      hasSitemap: false, // Will be checked by trying to access sitemap.xml
+      mobileResponsive: $('meta[name="viewport"]').length > 0,
+      hasSSL: url.startsWith('https'),
+      socialTags: {
+        facebook: $('meta[property^="og:"]').length > 0,
+        twitter: $('meta[name^="twitter:"]').length > 0,
+        linkedin: $('meta[property^="linkedin:"]').length > 0
+      }
+    };
+
+    // Check for sitemap
+    try {
+      const sitemapUrl = new URL('/sitemap.xml', url).href;
+      const sitemapResponse = await axios.get(`${CORS_PROXY}${encodeURIComponent(sitemapUrl)}`, {
+        timeout: 5000,
+        validateStatus: (status) => status === 200
+      });
+      contentAnalysis.hasSitemap = sitemapResponse.data.contents.includes('<?xml');
+    } catch {
+      // Sitemap not found or error accessing it
+    }
+
+    // Check for custom 404 page
+    try {
+      const notFoundUrl = new URL('/page-that-does-not-exist-' + Date.now(), url).href;
+      const notFoundResponse = await axios.get(`${CORS_PROXY}${encodeURIComponent(notFoundUrl)}`, {
+        timeout: 5000,
+        validateStatus: null
+      });
+      contentAnalysis.hasCustom404 = notFoundResponse.status === 404 && 
+        notFoundResponse.data.contents.length > 500; // Basic check if 404 page has content
+    } catch {
+      // Error checking 404 page
+    }
+
+    // Security headers analysis
+    const securityHeaders = {
+      hasHSTS: response.headers['strict-transport-security'] !== undefined,
+      hasXFrame: response.headers['x-frame-options'] !== undefined,
+      hasCSP: response.headers['content-security-policy'] !== undefined,
+      hasXSS: response.headers['x-xss-protection'] !== undefined,
+    };
+
+    // Accessibility analysis
+    const accessibility = {
+      hasAriaLabels: $('[aria-label]').length > 0,
+      hasAltText: $('img[alt]').length === $('img').length,
+      hasSkipLinks: $('a[href^="#main"], a[href^="#content"]').length > 0,
+      hasLangAttribute: $('html[lang]').length > 0,
+      hasAccessibleForms: $('form label').length === $('form input:not([type="submit"], [type="hidden"])').length,
+    };
+
+    // Additional SEO metrics
     const seoScore = calculateSEOScore({
       title,
       description,
@@ -112,6 +174,9 @@ export async function analyzeSEO(url: string): Promise<SEOAnalysis> {
       images,
       structure
     });
+
+    // Calculate content score
+    const contentScore = calculateContentScore(contentAnalysis, accessibility);
 
     // Advanced analysis
     const advancedAnalysis = await analyzeLinks(url);
@@ -126,6 +191,10 @@ export async function analyzeSEO(url: string): Promise<SEOAnalysis> {
       performance,
       structure,
       seoScore,
+      contentAnalysis,
+      securityHeaders,
+      accessibility,
+      contentScore,
       advancedAnalysis
     };
   } catch (error) {
@@ -241,5 +310,61 @@ function calculateSEOScore(data: any) {
     score: Math.round(score),
     rating: score >= 80 ? 'excellent' : score >= 60 ? 'good' : score >= 40 ? 'fair' : 'poor',
     suggestions
+  };
+}
+
+function calculateContentScore(contentAnalysis: any, accessibility: any) {
+  let score = 0;
+  const suggestions: string[] = [];
+
+  // Content quality scoring (0-40 points)
+  if (contentAnalysis.wordCount > 300) score += 10;
+  else suggestions.push('Add more content to improve engagement');
+  
+  if (contentAnalysis.textToHtmlRatio > 10) score += 10;
+  else suggestions.push('Improve text to HTML ratio');
+  
+  if (contentAnalysis.hasSchema) score += 10;
+  else suggestions.push('Add schema markup for better search engine understanding');
+  
+  if (contentAnalysis.hasCanonical) score += 5;
+  else suggestions.push('Add canonical tag to prevent duplicate content issues');
+  
+  if (contentAnalysis.hasSitemap) score += 5;
+  else suggestions.push('Add XML sitemap for better search engine crawling');
+
+  // Technical optimization (0-30 points)
+  if (contentAnalysis.hasSSL) score += 10;
+  else suggestions.push('Enable HTTPS for better security');
+  
+  if (contentAnalysis.mobileResponsive) score += 10;
+  else suggestions.push('Make website mobile-friendly');
+  
+  if (contentAnalysis.hasFavicon) score += 5;
+  else suggestions.push('Add favicon for better brand recognition');
+  
+  if (contentAnalysis.hasCustom404) score += 5;
+  else suggestions.push('Create custom 404 page for better user experience');
+
+  // Accessibility scoring (0-30 points)
+  if (accessibility.hasAriaLabels) score += 6;
+  else suggestions.push('Add ARIA labels for better accessibility');
+  
+  if (accessibility.hasAltText) score += 6;
+  else suggestions.push('Add alt text to all images');
+  
+  if (accessibility.hasSkipLinks) score += 6;
+  else suggestions.push('Add skip links for better navigation');
+  
+  if (accessibility.hasLangAttribute) score += 6;
+  else suggestions.push('Add language attribute to HTML tag');
+  
+  if (accessibility.hasAccessibleForms) score += 6;
+  else suggestions.push('Make forms more accessible by adding proper labels');
+
+  return {
+    score: Math.min(100, score),
+    rating: score >= 80 ? 'excellent' : score >= 60 ? 'good' : score >= 40 ? 'fair' : 'poor',
+    suggestions: suggestions
   };
 }

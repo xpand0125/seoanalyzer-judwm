@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Activity, Image, Link2, FileText, AlertTriangle, Layout, Share2, Globe, Compass, Moon, Sun, Award } from 'lucide-react';
+import { Search, Activity, Image, Link2, FileText, AlertTriangle, Layout, Share2, Globe, Compass, Moon, Sun, Award, Shield } from 'lucide-react';
 import { analyzeSEO } from './services/seoAnalyzer';
 import type { SEOAnalysis } from './types/seo';
 
@@ -442,6 +442,175 @@ function App() {
                 </div>
               </>
             )}
+            {/* Content Analysis */}
+            <div className={`${darkMode ? 'dark:bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-6`}>
+              <h2 className={`text-lg font-semibold mb-4 flex items-center ${darkMode ? 'dark:text-gray-100' : 'text-gray-900'}`}>
+                <FileText className="h-5 w-5 mr-2 text-indigo-600" />
+                Content Analysis
+              </h2>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getScoreColor(analysis.contentScore.score)}`}>
+                    {analysis.contentScore.rating.toUpperCase()}
+                  </span>
+                  <span className={`text-lg font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                    {analysis.contentScore.score}/100
+                  </span>
+                </div>
+                <div className="relative pt-1">
+                  <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200 dark:bg-gray-700">
+                    <div
+                      style={{ width: `${analysis.contentScore.score}%` }}
+                      className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center ${getProgressColor(analysis.contentScore.score)}`}
+                    ></div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/30' : 'bg-gray-50'}`}>
+                    <h3 className={`text-sm font-semibold mb-3 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Content Metrics</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Word Count:</span>
+                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>{analysis.contentAnalysis.wordCount}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Paragraphs:</span>
+                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>{analysis.contentAnalysis.paragraphs}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Reading Time:</span>
+                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>{analysis.contentAnalysis.readingTime} min</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Text/HTML Ratio:</span>
+                        <span className={`text-sm font-medium ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>{analysis.contentAnalysis.textToHtmlRatio}%</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/30' : 'bg-gray-50'}`}>
+                    <h3 className={`text-sm font-semibold mb-3 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Technical Checks</h3>
+                    <div className="space-y-2">
+                      {[
+                        { label: 'Schema Markup', value: analysis.contentAnalysis.hasSchema },
+                        { label: 'Canonical Tag', value: analysis.contentAnalysis.hasCanonical },
+                        { label: 'Sitemap', value: analysis.contentAnalysis.hasSitemap },
+                        { label: 'Custom 404', value: analysis.contentAnalysis.hasCustom404 },
+                        { label: 'Mobile Responsive', value: analysis.contentAnalysis.mobileResponsive },
+                        { label: 'SSL Enabled', value: analysis.contentAnalysis.hasSSL },
+                      ].map((item, index) => (
+                        <div key={index} className="flex items-center justify-between">
+                          <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{item.label}:</span>
+                          <span className={`flex items-center ${item.value ? 'text-green-500' : 'text-red-500'}`}>
+                            {item.value ? (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                              </svg>
+                            ) : (
+                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            )}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Security & Accessibility */}
+            <div className={`${darkMode ? 'dark:bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-6`}>
+              <h2 className={`text-lg font-semibold mb-4 flex items-center ${darkMode ? 'dark:text-gray-100' : 'text-gray-900'}`}>
+                <Shield className="h-5 w-5 mr-2 text-indigo-600" />
+                Security & Accessibility
+              </h2>
+              <div className="grid grid-cols-2 gap-4">
+                <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/30' : 'bg-gray-50'}`}>
+                  <h3 className={`text-sm font-semibold mb-3 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Security Headers</h3>
+                  <div className="space-y-2">
+                    {[
+                      { label: 'HSTS', value: analysis.securityHeaders.hasHSTS },
+                      { label: 'X-Frame-Options', value: analysis.securityHeaders.hasXFrame },
+                      { label: 'Content-Security-Policy', value: analysis.securityHeaders.hasCSP },
+                      { label: 'XSS Protection', value: analysis.securityHeaders.hasXSS },
+                    ].map((item, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{item.label}:</span>
+                        <span className={`flex items-center ${item.value ? 'text-green-500' : 'text-red-500'}`}>
+                          {item.value ? (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/30' : 'bg-gray-50'}`}>
+                  <h3 className={`text-sm font-semibold mb-3 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Accessibility</h3>
+                  <div className="space-y-2">
+                    {[
+                      { label: 'ARIA Labels', value: analysis.accessibility.hasAriaLabels },
+                      { label: 'Image Alt Text', value: analysis.accessibility.hasAltText },
+                      { label: 'Skip Links', value: analysis.accessibility.hasSkipLinks },
+                      { label: 'Language Attribute', value: analysis.accessibility.hasLangAttribute },
+                      { label: 'Accessible Forms', value: analysis.accessibility.hasAccessibleForms },
+                    ].map((item, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{item.label}:</span>
+                        <span className={`flex items-center ${item.value ? 'text-green-500' : 'text-red-500'}`}>
+                          {item.value ? (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                          ) : (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Social Media Integration */}
+            <div className={`${darkMode ? 'dark:bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-6`}>
+              <h2 className={`text-lg font-semibold mb-4 flex items-center ${darkMode ? 'dark:text-gray-100' : 'text-gray-900'}`}>
+                <Share2 className="h-5 w-5 mr-2 text-indigo-600" />
+                Social Media Integration
+              </h2>
+              <div className="grid grid-cols-3 gap-4">
+                {[
+                  { name: 'Facebook', icon: 'facebook', value: analysis.contentAnalysis.socialTags.facebook },
+                  { name: 'Twitter', icon: 'twitter', value: analysis.contentAnalysis.socialTags.twitter },
+                  { name: 'LinkedIn', icon: 'linkedin', value: analysis.contentAnalysis.socialTags.linkedin },
+                ].map((platform) => (
+                  <div
+                    key={platform.name}
+                    className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/30' : 'bg-gray-50'} flex flex-col items-center justify-center space-y-2`}
+                  >
+                    <span className={`text-2xl ${platform.value ? 'text-indigo-500' : 'text-gray-400'}`}>
+                      <i className={`fab fa-${platform.icon}`}></i>
+                    </span>
+                    <span className={`text-sm font-medium ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                      {platform.name}
+                    </span>
+                    <span className={`text-xs ${platform.value ? 'text-green-500' : 'text-red-500'}`}>
+                      {platform.value ? 'Integrated' : 'Not Found'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </main>
