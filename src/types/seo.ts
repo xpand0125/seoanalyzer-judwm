@@ -12,8 +12,18 @@ export interface SEOAnalysis {
     paths: string[];
   };
   links: {
-    internal: string[];
-    external: string[];
+    internal: {
+      total: number;
+      unique: number;
+      paths: string[];
+    };
+    external: {
+      total: number;
+      unique: number;
+      social: number;
+      nofollow: number;
+      domains: string[];
+    };
   };
   meta: {
     hasViewport: boolean;
@@ -61,28 +71,9 @@ export interface SEOAnalysis {
       tables: number;
     };
   };
-  advancedAnalysis?: {
-    backlinks: {
-      total: number;
-      dofollow: number;
-      nofollow: number;
-    };
-    linkMetrics: {
-      internal: {
-        total: number;
-        unique: number;
-      };
-      external: {
-        total: number;
-        unique: number;
-        social: number;
-        nofollow: number;
-      };
-    };
-    niche: string[];
-    traffic: {
-      score: number;
-      level: 'low' | 'medium' | 'high';
-    };
+  traffic: {
+    score: number;
+    level: 'low' | 'medium' | 'high';
   };
+  niche: string[];
 }

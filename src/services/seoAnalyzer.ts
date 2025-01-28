@@ -70,14 +70,62 @@ export async function analyzeSEO(url: string): Promise<SEOAnalysis> {
       paths: $('img').map((_, el) => $(el).attr('src')).get(),
     };
 
-    // Links analysis
+    // Analyze links
+    const internalLinks = new Set<string>();
+    const externalLinks = new Set<string>();
+    const internalPaths: string[] = [];
+    const externalDomains: string[] = [];
+    let socialCount = 0;
+    let nofollowCount = 0;
+
+    $('a[href]').each((_, el) => {
+      const href = $(el).attr('href');
+      if (!href) return;
+      
+      const rel = $(el).attr('rel');
+      const isNofollow = rel && rel.includes('nofollow');
+      if (isNofollow) nofollowCount++;
+      
+      try {
+        const linkUrl = new URL(href, url);
+        const isSameHost = linkUrl.hostname === new URL(url).hostname;
+        
+        // Check if it's a social media link
+        const isSocial = linkUrl.hostname.match(
+          /facebook\.com|twitter\.com|instagram\.com|linkedin\.com|youtube\.com|pinterest\.com/i
+        );
+        
+        if (isSocial) socialCount++;
+        
+        if (isSameHost) {
+          internalLinks.add(linkUrl.pathname);
+          internalPaths.push(linkUrl.pathname);
+        } else if (linkUrl.protocol.startsWith('http')) {
+          externalLinks.add(linkUrl.hostname);
+          externalDomains.push(linkUrl.hostname);
+        }
+      } catch {
+        // If URL parsing fails, assume it's an internal link
+        if (href.startsWith('/')) {
+          internalLinks.add(href);
+          internalPaths.push(href);
+        }
+      }
+    });
+
     const links = {
-      internal: $('a[href^="/"], a[href^="' + url + '"]')
-        .map((_, el) => $(el).attr('href'))
-        .get(),
-      external: $('a[href^="http"]')
-        .map((_, el) => $(el).attr('href'))
-        .get(),
+      internal: {
+        total: $('a[href^="/"]').length,
+        unique: internalLinks.size,
+        paths: internalPaths
+      },
+      external: {
+        total: $('a[href^="http"]').length,
+        unique: externalLinks.size,
+        social: socialCount,
+        nofollow: nofollowCount,
+        domains: externalDomains
+      }
     };
 
     // Meta tags and Open Graph
