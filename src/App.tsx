@@ -30,7 +30,7 @@ function App() {
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Activity className="h-8 w-8 text-indigo-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">SEO Analyzer</span>
+              <span className="ml-2 text-xl font-bold text-gray-900">SEO Analyzer by Judwm</span>
             </div>
           </div>
         </div>
