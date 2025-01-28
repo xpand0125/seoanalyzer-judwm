@@ -1,7 +1,6 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import type { SEOAnalysis } from '../types/seo';
-import { analyzeLinks } from './linkAnalyzer';
 
 // Try different CORS proxies if one fails
 const CORS_PROXIES = [
@@ -9,6 +8,56 @@ const CORS_PROXIES = [
   'https://cors-anywhere.herokuapp.com/',
   'https://cors.bridged.cc/'
 ];
+
+function calculatePerformanceScore(metrics: {
+  htmlSize: number;
+  loadTime: number;
+  cssFiles: number;
+  jsFiles: number;
+  inlineStyles: number;
+  inlineScripts: number;
+}): { score: number; rating: 'poor' | 'fair' | 'good'; issues: string[] } {
+  let score = 100;
+  const issues: string[] = [];
+
+  // HTML Size (max deduction: 20 points)
+  if (metrics.htmlSize > 100000) { // 100KB
+    score -= Math.min(20, Math.floor(metrics.htmlSize / 100000));
+    issues.push('HTML file size is too large');
+  }
+
+  // Load Time (max deduction: 30 points)
+  if (metrics.loadTime > 2000) { // 2 seconds
+    score -= Math.min(30, Math.floor(metrics.loadTime / 1000) * 10);
+    issues.push('Page load time is too slow');
+  }
+
+  // Resource counts (max deduction: 30 points)
+  const totalResources = metrics.cssFiles + metrics.jsFiles;
+  if (totalResources > 15) {
+    score -= Math.min(15, totalResources - 15);
+    issues.push('Too many external resources (CSS/JS files)');
+  }
+
+  if (metrics.inlineStyles > 5) {
+    score -= Math.min(7, metrics.inlineStyles - 5);
+    issues.push('Too many inline styles');
+  }
+
+  if (metrics.inlineScripts > 5) {
+    score -= Math.min(8, metrics.inlineScripts - 5);
+    issues.push('Too many inline scripts');
+  }
+
+  // Normalize score to 0-100
+  score = Math.max(0, Math.min(100, score));
+
+  return {
+    score,
+    rating: score < 50 ? 'poor' : score < 80 ? 'fair' : 'good',
+    issues
+  };
+}
 
 export async function analyzeSEO(url: string): Promise<SEOAnalysis> {
   try {
@@ -28,7 +77,7 @@ export async function analyzeSEO(url: string): Promise<SEOAnalysis> {
       try {
         const startTime = Date.now();
         const response = await axios.get(`${proxy}${encodeURIComponent(url)}`, {
-          timeout: 20000, // Increased timeout to 20 seconds
+          timeout: 20000,
           validateStatus: (status) => status === 200,
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -144,7 +193,8 @@ export async function analyzeSEO(url: string): Promise<SEOAnalysis> {
     };
 
     // Calculate content quality score
-    const wordCount = $('body').text().trim().split(/\s+/).length;
+    const content = $('body').text();
+    const wordCount = content.trim().split(/\s+/).length;
     const paragraphs = $('p').length;
     const lists = $('ul, ol').length;
     const tables = $('table').length;
@@ -197,8 +247,33 @@ export async function analyzeSEO(url: string): Promise<SEOAnalysis> {
       hasNavTag: $('nav').length > 0,
     };
 
-    // Advanced analysis
-    const advancedAnalysis = await analyzeLinks(url);
+    // Detect niche based on keywords and content
+    const metaKeywords = meta.keywords?.toLowerCase() || '';
+    const pageText = content.toLowerCase();
+    
+    const niches = [
+      'technology', 'health', 'finance', 'education', 'entertainment',
+      'travel', 'food', 'fashion', 'sports', 'business'
+    ];
+    
+    const detectedNiches = niches.filter(niche => 
+      pageText.includes(niche) || 
+      metaKeywords.includes(niche) || 
+      title.toLowerCase().includes(niche)
+    );
+
+    // Calculate traffic potential
+    const contentLength = content.length;
+    const hasAnalytics = html.includes('google-analytics') || html.includes('gtag');
+    
+    let trafficScore = 0;
+    trafficScore += Math.min(100, contentLength / 1000); // Content length score (max 100)
+    trafficScore += Math.min(50, externalLinks.size * 2); // External links score (max 50)
+    trafficScore += socialCount * 10; // Social presence score (10 per platform)
+    trafficScore += hasAnalytics ? 30 : 0; // Analytics presence score
+    
+    // Normalize score to 0-100
+    trafficScore = Math.min(100, trafficScore);
 
     return {
       title,
@@ -210,69 +285,14 @@ export async function analyzeSEO(url: string): Promise<SEOAnalysis> {
       performance,
       structure,
       contentScore,
-      advancedAnalysis
+      traffic: {
+        score: Math.round(trafficScore),
+        level: trafficScore < 40 ? 'low' : trafficScore < 70 ? 'medium' : 'high'
+      },
+      niche: detectedNiches.length > 0 ? detectedNiches : ['unknown']
     };
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`SEO analysis failed: ${error.message}`);
-    }
-    throw new Error('SEO analysis failed');
+    console.error('SEO Analysis failed:', error);
+    throw error;
   }
-}
-
-function calculatePerformanceScore(metrics: {
-  htmlSize: number;
-  loadTime: number;
-  cssFiles: number;
-  jsFiles: number;
-  inlineStyles: number;
-  inlineScripts: number;
-}): { score: number; rating: 'poor' | 'fair' | 'good'; issues: string[] } {
-  let score = 100;
-  const issues: string[] = [];
-
-  // HTML Size (ideal < 100KB)
-  if (metrics.htmlSize > 150000) {
-    score -= 20;
-    issues.push('HTML size is too large (>150KB)');
-  } else if (metrics.htmlSize > 100000) {
-    score -= 10;
-    issues.push('HTML size is slightly large (>100KB)');
-  }
-
-  // Load Time (ideal < 3s)
-  if (metrics.loadTime > 5000) {
-    score -= 20;
-    issues.push('Load time is too high (>5s)');
-  } else if (metrics.loadTime > 3000) {
-    score -= 10;
-    issues.push('Load time is slightly high (>3s)');
-  }
-
-  // Resource counts
-  if (metrics.cssFiles > 5) {
-    score -= 10;
-    issues.push('Too many CSS files');
-  }
-  if (metrics.jsFiles > 10) {
-    score -= 10;
-    issues.push('Too many JavaScript files');
-  }
-  if (metrics.inlineStyles > 5) {
-    score -= 5;
-    issues.push('Too many inline styles');
-  }
-  if (metrics.inlineScripts > 5) {
-    score -= 5;
-    issues.push('Too many inline scripts');
-  }
-
-  // Ensure score stays within 0-100
-  score = Math.max(0, Math.min(100, score));
-
-  return {
-    score,
-    rating: score >= 80 ? 'good' : score >= 60 ? 'fair' : 'poor',
-    issues
-  };
 }

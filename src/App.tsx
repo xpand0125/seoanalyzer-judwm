@@ -24,15 +24,19 @@ function App() {
     localStorage.setItem('darkMode', darkMode.toString());
   }, [darkMode]);
 
-  const handleAnalyze = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleAnalyze = async () => {
+    if (!url) return;
+
     setLoading(true);
-    setError('');
+    setError(null);
+    setAnalysis(null);
+
     try {
       const result = await analyzeSEO(url);
       setAnalysis(result);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to analyze website. Please try again.');
+      console.error('Analysis failed:', err);
+      setError(err instanceof Error ? err.message : 'Analysis failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -66,7 +70,7 @@ function App() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className={`${analysis ? 'mb-8' : 'flex min-h-[calc(100vh-12rem)] items-center justify-center'}`}>
           <div className={`${analysis ? 'w-full' : 'w-full max-w-[500px]'} ${darkMode ? 'dark:bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-6 transition-all duration-300`}>
-            <form onSubmit={handleAnalyze} className="flex flex-col gap-4">
+            <form onSubmit={(e) => handleAnalyze()} className="flex flex-col gap-4">
               <input
                 type="url"
                 value={url}
@@ -256,6 +260,29 @@ function App() {
                       <p className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                         {analysis.links.external.nofollow}
                       </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Traffic Score */}
+                <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <h3 className={`text-sm font-medium mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Traffic Potential</h3>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className={`text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full ${
+                        analysis.traffic.level === 'high'
+                          ? 'text-green-600 bg-green-200'
+                          : analysis.traffic.level === 'medium'
+                          ? 'text-yellow-600 bg-yellow-200'
+                          : 'text-red-600 bg-red-200'
+                      }`}>
+                        {analysis.traffic.level}
+                      </span>
+                    </div>
+                    <div className={`text-right ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      <span className="text-sm font-semibold inline-block">
+                        {analysis.traffic.score}%
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -450,8 +477,8 @@ function App() {
                       <div className="flex mb-2 items-center justify-between">
                         <div>
                           <span className={`text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full ${
-                            analysis.advancedAnalysis.traffic.level === 'high' 
-                              ? 'text-green-600 bg-green-200' 
+                            analysis.advancedAnalysis.traffic.level === 'high'
+                              ? 'text-green-600 bg-green-200'
                               : analysis.advancedAnalysis.traffic.level === 'medium'
                               ? 'text-yellow-600 bg-yellow-200'
                               : 'text-red-600 bg-red-200'
@@ -466,7 +493,7 @@ function App() {
                         </div>
                       </div>
                       <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
-                        <div 
+                        <div
                           style={{ width: `${analysis.advancedAnalysis.traffic.score}%` }}
                           className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center ${
                             analysis.advancedAnalysis.traffic.level === 'high'
