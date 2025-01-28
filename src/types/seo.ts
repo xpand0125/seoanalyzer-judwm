@@ -41,15 +41,15 @@ export interface SEOAnalysis {
     hasNavTag: boolean;
   };
   advancedAnalysis?: {
-    brokenLinks: {
-      total: number;
-      urls: string[];
-    };
     backlinks: {
       total: number;
       dofollow: number;
       nofollow: number;
     };
     niche: string[];
+    traffic: {
+      score: number;
+      level: 'low' | 'medium' | 'high';
+    };
   };
 }

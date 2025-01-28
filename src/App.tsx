@@ -275,28 +275,47 @@ function App() {
             {/* Advanced Analysis */}
             {analysis.advancedAnalysis && (
               <>
-                {/* Broken Links */}
+                {/* Traffic Analysis */}
                 <div className={`${darkMode ? 'dark:bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-6`}>
                   <h2 className={`text-lg font-semibold mb-4 flex items-center ${darkMode ? 'dark:text-white' : 'text-gray-900'}`}>
-                    <Globe className="h-5 w-5 mr-2 text-indigo-600" />
-                    Broken Links
+                    <Activity className="h-5 w-5 mr-2 text-indigo-600" />
+                    Traffic Potential
                   </h2>
                   <div className="space-y-4">
-                    <div>
-                      <h3 className="font-medium text-gray-700">Statistics</h3>
-                      <p className="mt-1 text-gray-600">
-                        Total Broken Links: {analysis.advancedAnalysis.brokenLinks.total}
-                      </p>
-                      {analysis.advancedAnalysis.brokenLinks.total > 0 && (
-                        <div className="mt-2">
-                          <h4 className="font-medium text-gray-700">Broken URLs:</h4>
-                          <ul className="mt-1 space-y-1 text-sm text-gray-600">
-                            {analysis.advancedAnalysis.brokenLinks.urls.map((url, index) => (
-                              <li key={index} className="truncate">{url}</li>
-                            ))}
-                          </ul>
+                    <div className="relative pt-1">
+                      <div className="flex mb-2 items-center justify-between">
+                        <div>
+                          <span className={`text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full ${
+                            analysis.advancedAnalysis.traffic.level === 'high' 
+                              ? 'text-green-600 bg-green-200' 
+                              : analysis.advancedAnalysis.traffic.level === 'medium'
+                              ? 'text-yellow-600 bg-yellow-200'
+                              : 'text-red-600 bg-red-200'
+                          }`}>
+                            {analysis.advancedAnalysis.traffic.level}
+                          </span>
                         </div>
-                      )}
+                        <div className={`text-right ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                          <span className="text-sm font-semibold inline-block">
+                            {analysis.advancedAnalysis.traffic.score}%
+                          </span>
+                        </div>
+                      </div>
+                      <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
+                        <div 
+                          style={{ width: `${analysis.advancedAnalysis.traffic.score}%` }}
+                          className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center ${
+                            analysis.advancedAnalysis.traffic.level === 'high'
+                              ? 'bg-green-500'
+                              : analysis.advancedAnalysis.traffic.level === 'medium'
+                              ? 'bg-yellow-500'
+                              : 'bg-red-500'
+                          }`}
+                        ></div>
+                      </div>
+                      <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                        Traffic potential is calculated based on content quality, social presence, and site structure.
+                      </p>
                     </div>
                   </div>
                 </div>
