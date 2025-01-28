@@ -1,6 +1,5 @@
 import axios from 'axios';
 import * as cheerio from 'cheerio';
-import Moz from 'moz-api-wrapper';
 
 export interface LinkAnalysis {
   brokenLinks: {
@@ -13,21 +12,7 @@ export interface LinkAnalysis {
     nofollow: number;
   };
   niche: string[];
-  mozMetrics: {
-    domainAuthority: number;
-    pageAuthority: number;
-    spamScore: number;
-  };
 }
-
-// Free API for backlink data
-const BACKLINK_API = 'https://openpagerank.com/api/v1.0/getPageRank';
-
-// Initialize Moz client - requires API credentials
-const mozClient = new Moz({
-  accessId: process.env.MOZ_ACCESS_ID || '',
-  secretKey: process.env.MOZ_SECRET_KEY || ''
-});
 
 export async function analyzeBrokenLinks(urls: string[]): Promise<string[]> {
   const brokenLinks: string[] = [];
@@ -58,32 +43,6 @@ export async function analyzeBrokenLinks(urls: string[]): Promise<string[]> {
   });
   
   return brokenLinks;
-}
-
-export async function getMozMetrics(url: string) {
-  try {
-    if (!mozClient.accessId || !mozClient.secretKey) {
-      return {
-        domainAuthority: 0,
-        pageAuthority: 0,
-        spamScore: 0
-      };
-    }
-
-    const metrics = await mozClient.urlMetrics(url, ['da', 'pa', 'spam_score']);
-    return {
-      domainAuthority: metrics.da || 0,
-      pageAuthority: metrics.pa || 0,
-      spamScore: metrics.spam_score || 0
-    };
-  } catch (error) {
-    console.error('Failed to fetch Moz metrics:', error);
-    return {
-      domainAuthority: 0,
-      pageAuthority: 0,
-      spamScore: 0
-    };
-  }
 }
 
 export async function analyzeLinks(url: string): Promise<LinkAnalysis> {
@@ -128,9 +87,6 @@ export async function analyzeLinks(url: string): Promise<LinkAnalysis> {
       title.includes(niche)
     );
     
-    // Get Moz metrics
-    const mozMetrics = await getMozMetrics(url);
-    
     return {
       brokenLinks: {
         total: brokenLinks.length,
@@ -141,8 +97,7 @@ export async function analyzeLinks(url: string): Promise<LinkAnalysis> {
         dofollow,
         nofollow
       },
-      niche: detectedNiches.length > 0 ? detectedNiches : ['unknown'],
-      mozMetrics
+      niche: detectedNiches.length > 0 ? detectedNiches : ['unknown']
     };
   } catch (error) {
     if (error instanceof Error) {
