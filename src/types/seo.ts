@@ -51,5 +51,10 @@ export interface SEOAnalysis {
       nofollow: number;
     };
     niche: string[];
+    mozMetrics: {
+      domainAuthority: number;
+      pageAuthority: number;
+      spamScore: number;
+    };
   };
 }
