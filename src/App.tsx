@@ -257,17 +257,132 @@ function App() {
                 Performance Metrics
               </h2>
               <div className="space-y-4">
-                <div>
-                  <h3 className="font-medium text-gray-700">Page Size</h3>
-                  <p className="mt-1 text-gray-600">
-                    {(analysis.performance.htmlSize / 1024).toFixed(2)} KB
-                  </p>
+                {/* Performance Score */}
+                <div className="relative pt-1">
+                  <div className="flex mb-2 items-center justify-between">
+                    <div>
+                      <span className={`text-xs font-semibold inline-block py-1 px-2 uppercase rounded-full ${
+                        analysis.performance.score.rating === 'good'
+                          ? 'text-green-600 bg-green-200'
+                          : analysis.performance.score.rating === 'fair'
+                          ? 'text-yellow-600 bg-yellow-200'
+                          : 'text-red-600 bg-red-200'
+                      }`}>
+                        {analysis.performance.score.rating}
+                      </span>
+                    </div>
+                    <div className={`text-right ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                      <span className="text-sm font-semibold inline-block">
+                        {analysis.performance.score.score}%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-200">
+                    <div
+                      style={{ width: `${analysis.performance.score.score}%` }}
+                      className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center ${
+                        analysis.performance.score.rating === 'good'
+                          ? 'bg-green-500'
+                          : analysis.performance.score.rating === 'fair'
+                          ? 'bg-yellow-500'
+                          : 'bg-red-500'
+                      }`}
+                    ></div>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-medium text-gray-700">Load Time</h3>
-                  <p className="mt-1 text-gray-600">
-                    {analysis.performance.loadTime.toFixed(2)} ms
-                  </p>
+
+                {/* Issues */}
+                {analysis.performance.score.issues.length > 0 && (
+                  <div className={`mt-2 p-3 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                    <h3 className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Issues to Address:</h3>
+                    <ul className={`list-disc pl-5 space-y-1 ${darkMode ? 'text-gray-300' : 'text-gray-600'} text-sm`}>
+                      {analysis.performance.score.issues.map((issue, index) => (
+                        <li key={index}>{issue}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Metrics */}
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className={`p-3 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                    <h3 className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Load Time</h3>
+                    <p className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                      {(analysis.performance.loadTime / 1000).toFixed(2)}s
+                    </p>
+                  </div>
+                  <div className={`p-3 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                    <h3 className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Page Size</h3>
+                    <p className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                      {(analysis.performance.htmlSize / 1024).toFixed(1)} KB
+                    </p>
+                  </div>
+                </div>
+
+                {/* Resource Counts */}
+                <div className={`mt-4 p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <h3 className={`text-sm font-medium mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Resource Distribution</h3>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>CSS Files: {analysis.performance.resourceCounts.css}</p>
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>JS Files: {analysis.performance.resourceCounts.js}</p>
+                    </div>
+                    <div>
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Inline Styles: {analysis.performance.resourceCounts.inlineStyles}</p>
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Inline Scripts: {analysis.performance.resourceCounts.inlineScripts}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Content Analysis */}
+            <div className={`${darkMode ? 'dark:bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-6`}>
+              <h2 className={`text-lg font-semibold mb-4 flex items-center ${darkMode ? 'dark:text-white' : 'text-gray-900'}`}>
+                <FileText className="h-5 w-5 mr-2 text-indigo-600" />
+                Content Analysis
+              </h2>
+              <div className="space-y-4">
+                <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h3 className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Word Count</h3>
+                      <p className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                        {analysis.contentScore.wordCount.toLocaleString()}
+                      </p>
+                    </div>
+                    <div>
+                      <h3 className={`text-sm font-medium mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Reading Time</h3>
+                      <p className={`text-2xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+                        {analysis.contentScore.readingTime} min
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+                  <h3 className={`text-sm font-medium mb-3 ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>Content Structure</h3>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Paragraphs</p>
+                      <p className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>{analysis.contentScore.contentStructure.paragraphs}</p>
+                    </div>
+                    <div>
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Lists</p>
+                      <p className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>{analysis.contentScore.contentStructure.lists}</p>
+                    </div>
+                    <div>
+                      <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Tables</p>
+                      <p className={`text-xl font-bold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>{analysis.contentScore.contentStructure.tables}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={`flex items-center gap-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <div className={`w-4 h-4 rounded-full ${analysis.contentScore.hasStructuredData ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                  <span className="text-sm">
+                    {analysis.contentScore.hasStructuredData ? 'Has structured data (Schema.org)' : 'No structured data found'}
+                  </span>
                 </div>
               </div>
             </div>

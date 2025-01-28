@@ -3,7 +3,12 @@ import * as cheerio from 'cheerio';
 import type { SEOAnalysis } from '../types/seo';
 import { analyzeLinks } from './linkAnalyzer';
 
-const CORS_PROXY = 'https://api.allorigins.win/get?url=';
+// Try different CORS proxies if one fails
+const CORS_PROXIES = [
+  'https://api.allorigins.win/get?url=',
+  'https://cors-anywhere.herokuapp.com/',
+  'https://cors.bridged.cc/'
+];
 
 export async function analyzeSEO(url: string): Promise<SEOAnalysis> {
   try {
@@ -14,22 +19,35 @@ export async function analyzeSEO(url: string): Promise<SEOAnalysis> {
       throw new Error('Invalid URL format. Please enter a valid URL including http:// or https://');
     }
 
-    const startTime = Date.now();
-    const response = await axios.get(`${CORS_PROXY}${encodeURIComponent(url)}`, {
-      timeout: 10000, // 10 second timeout
-      validateStatus: (status) => status === 200, // Only accept 200 status
-    });
+    let html = '';
+    let loadTime = 0;
+    let proxyUsed = '';
 
-    if (!response.data || !response.data.contents) {
-      throw new Error('Failed to fetch website content');
+    // Try each proxy until one works
+    for (const proxy of CORS_PROXIES) {
+      try {
+        const startTime = Date.now();
+        const response = await axios.get(`${proxy}${encodeURIComponent(url)}`, {
+          timeout: 20000, // Increased timeout to 20 seconds
+          validateStatus: (status) => status === 200,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
+        });
+
+        if (response.data) {
+          html = proxy.includes('allorigins') ? response.data.contents : response.data;
+          loadTime = Date.now() - startTime;
+          proxyUsed = proxy;
+          break;
+        }
+      } catch (err) {
+        continue;
+      }
     }
 
-    const loadTime = Date.now() - startTime;
-    const html = response.data.contents;
-
-    // Validate HTML content
-    if (!html || typeof html !== 'string') {
-      throw new Error('Invalid website content received');
+    if (!html) {
+      throw new Error('Failed to fetch website content. The site might be too large or blocking our request.');
     }
 
     const $ = cheerio.load(html);
@@ -77,13 +95,51 @@ export async function analyzeSEO(url: string): Promise<SEOAnalysis> {
       },
     };
 
-    // Performance metrics
-    const performance = {
-      htmlSize: html.length,
-      loadTime: loadTime,
+    // Calculate content quality score
+    const wordCount = $('body').text().trim().split(/\s+/).length;
+    const paragraphs = $('p').length;
+    const lists = $('ul, ol').length;
+    const tables = $('table').length;
+    const hasSchema = html.includes('application/ld+json') || html.includes('itemtype');
+    
+    const contentScore = {
+      wordCount,
+      readingTime: Math.ceil(wordCount / 200), // Average reading speed of 200 words per minute
+      hasStructuredData: hasSchema,
+      contentStructure: {
+        paragraphs,
+        lists,
+        tables
+      }
     };
 
-    // HTML Structure analysis
+    // Performance metrics
+    const htmlSize = html.length;
+    const cssFiles = $('link[rel="stylesheet"]').length;
+    const jsFiles = $('script[src]').length;
+    const inlineStyles = $('style').length + $('[style]').length;
+    const inlineScripts = $('script:not([src])').length;
+
+    const performance = {
+      htmlSize,
+      loadTime,
+      resourceCounts: {
+        css: cssFiles,
+        js: jsFiles,
+        inlineStyles,
+        inlineScripts
+      },
+      score: calculatePerformanceScore({
+        htmlSize,
+        loadTime,
+        cssFiles,
+        jsFiles,
+        inlineStyles,
+        inlineScripts
+      })
+    };
+
+    // HTML Structure
     const structure = {
       hasDoctype: html.toLowerCase().includes('<!doctype html>'),
       hasHtmlLang: $('html[lang]').length > 0,
@@ -105,15 +161,70 @@ export async function analyzeSEO(url: string): Promise<SEOAnalysis> {
       meta,
       performance,
       structure,
-      advancedAnalysis,
+      contentScore,
+      advancedAnalysis
     };
   } catch (error) {
     if (error instanceof Error) {
-      console.error('Analysis error:', error.message);
-      throw new Error(error.message);
-    } else {
-      console.error('Analysis error:', error);
-      throw new Error('Failed to analyze website. Please try again.');
+      throw new Error(`SEO analysis failed: ${error.message}`);
     }
+    throw new Error('SEO analysis failed');
   }
+}
+
+function calculatePerformanceScore(metrics: {
+  htmlSize: number;
+  loadTime: number;
+  cssFiles: number;
+  jsFiles: number;
+  inlineStyles: number;
+  inlineScripts: number;
+}): { score: number; rating: 'poor' | 'fair' | 'good'; issues: string[] } {
+  let score = 100;
+  const issues: string[] = [];
+
+  // HTML Size (ideal < 100KB)
+  if (metrics.htmlSize > 150000) {
+    score -= 20;
+    issues.push('HTML size is too large (>150KB)');
+  } else if (metrics.htmlSize > 100000) {
+    score -= 10;
+    issues.push('HTML size is slightly large (>100KB)');
+  }
+
+  // Load Time (ideal < 3s)
+  if (metrics.loadTime > 5000) {
+    score -= 20;
+    issues.push('Load time is too high (>5s)');
+  } else if (metrics.loadTime > 3000) {
+    score -= 10;
+    issues.push('Load time is slightly high (>3s)');
+  }
+
+  // Resource counts
+  if (metrics.cssFiles > 5) {
+    score -= 10;
+    issues.push('Too many CSS files');
+  }
+  if (metrics.jsFiles > 10) {
+    score -= 10;
+    issues.push('Too many JavaScript files');
+  }
+  if (metrics.inlineStyles > 5) {
+    score -= 5;
+    issues.push('Too many inline styles');
+  }
+  if (metrics.inlineScripts > 5) {
+    score -= 5;
+    issues.push('Too many inline scripts');
+  }
+
+  // Ensure score stays within 0-100
+  score = Math.max(0, Math.min(100, score));
+
+  return {
+    score,
+    rating: score >= 80 ? 'good' : score >= 60 ? 'fair' : 'poor',
+    issues
+  };
 }

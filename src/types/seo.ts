@@ -31,6 +31,17 @@ export interface SEOAnalysis {
   performance: {
     htmlSize: number;
     loadTime: number;
+    resourceCounts: {
+      css: number;
+      js: number;
+      inlineStyles: number;
+      inlineScripts: number;
+    };
+    score: {
+      score: number;
+      rating: 'poor' | 'fair' | 'good';
+      issues: string[];
+    };
   };
   structure: {
     hasDoctype: boolean;
@@ -39,6 +50,16 @@ export interface SEOAnalysis {
     hasHeaderTag: boolean;
     hasFooterTag: boolean;
     hasNavTag: boolean;
+  };
+  contentScore: {
+    wordCount: number;
+    readingTime: number;
+    hasStructuredData: boolean;
+    contentStructure: {
+      paragraphs: number;
+      lists: number;
+      tables: number;
+    };
   };
   advancedAnalysis?: {
     backlinks: {
